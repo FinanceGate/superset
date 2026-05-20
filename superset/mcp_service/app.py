@@ -151,6 +151,10 @@ User and Role Management:
 - list_roles: List roles with filtering (1-based pagination, admin only)
 - get_role_info: Get role details by ID (admin only)
 
+Alerts & Reports:
+- list_reports: List alerts and reports with filtering and search (1-based pagination)
+- get_report_info: Get detailed alert/report schedule info by ID
+
 Dataset Management:
 - list_datasets: List datasets with advanced filters (1-based pagination)
 - get_dataset_info: Get detailed dataset information by ID (includes columns/metrics)
@@ -699,6 +703,10 @@ from superset.mcp_service.explore.tool import (  # noqa: F401, E402
 from superset.mcp_service.query.tool import (  # noqa: F401, E402
     get_query_info,
     list_queries,
+)
+from superset.mcp_service.report.tool import (  # noqa: F401, E402
+    get_report_info,
+    list_reports,
 )
 from superset.mcp_service.role.tool import (  # noqa: F401, E402
     get_role_info,
