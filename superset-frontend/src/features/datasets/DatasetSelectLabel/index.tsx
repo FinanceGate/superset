@@ -19,6 +19,7 @@
 import { Tooltip } from '@superset-ui/core/components';
 import { t } from '@apache-superset/core/translation';
 import { styled } from '@apache-superset/core/theme';
+import { parentLabelLower } from 'src/features/semanticLayers/label';
 
 type Database = {
   database_name: string;
@@ -104,14 +105,13 @@ export const DatasetSelectLabel = (item: Dataset) => (
         </div>
         <div className="tooltip-description">
           <div>
-            {t('Database')}: {item.database.database_name}
+            {parentLabelLower(item.kind)}: {item.database.database_name}
           </div>
-          <div>
-            {t('Schema')}:{' '}
-            {item.schema && isValidValue(item.schema)
-              ? item.schema
-              : t('Not defined')}
-          </div>
+	  {item.schema && isValidValue(item.schema) &&
+	    <div>
+		{t('Schema')}:{' '}{item.schema}
+	    </div>
+	  }
         </div>
       </TooltipContent>
     }
