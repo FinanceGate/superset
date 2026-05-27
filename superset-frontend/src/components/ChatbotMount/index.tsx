@@ -16,23 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { SupersetClient } from '@superset-ui/core';
 import { css, useTheme } from '@apache-superset/core/theme';
 import { ErrorBoundary } from 'src/components/ErrorBoundary';
 import { getActiveChatbot } from 'src/core/chatbot';
-import { subscribeToLocation } from 'src/core/views';
-import { CHATBOT_LOCATION } from 'src/views/contributions';
+import { subscribeToRegistry, getRegistryVersion } from 'src/core/views';
 
 const CHATBOT_EDGE_MARGIN = 24;
 
 const ChatbotMount = () => {
   const theme = useTheme();
-  const [adminSelectedId, setAdminSelectedId] = useState<string | null>(null);
+  // undefined = settings not yet loaded; don't render anything until settings arrive.
+  const [adminSelectedId, setAdminSelectedId] = useState<
+    string | null | undefined
+  >(undefined);
   const [enabledMap, setEnabledMap] = useState<Record<string, boolean>>({});
-  const [activeChatbot, setActiveChatbot] = useState(() =>
-    getActiveChatbot(null, {}),
-  );
 
   useEffect(() => {
     let cancelled = false;
@@ -43,22 +42,27 @@ const ChatbotMount = () => {
         const enabled: Record<string, boolean> = json.result?.enabled ?? {};
         setAdminSelectedId(id);
         setEnabledMap(enabled);
-        setActiveChatbot(getActiveChatbot(id, enabled));
       })
       .catch(() => {
         // Settings fetch failure is non-fatal — fall back to first-to-register.
+        setAdminSelectedId(null);
       });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  useEffect(
+  const registryVersion = useSyncExternalStore(
+    subscribeToRegistry,
+    getRegistryVersion,
+  );
+
+  const activeChatbot = useMemo(
     () =>
-      subscribeToLocation(CHATBOT_LOCATION, () =>
-        setActiveChatbot(getActiveChatbot(adminSelectedId, enabledMap)),
-      ),
-    [adminSelectedId, enabledMap],
+      adminSelectedId === undefined
+        ? null
+        : getActiveChatbot(adminSelectedId, enabledMap),
+    [adminSelectedId, enabledMap, registryVersion],
   );
 
   if (!activeChatbot) {
