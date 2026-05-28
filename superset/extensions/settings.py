@@ -64,7 +64,9 @@ def _upsert_settings_row(
         )
         db.session.execute(stmt)
     else:
-        # MySQL/MariaDB: session.merge handles INSERT-or-UPDATE without rollback.
+        # MySQL/MariaDB: read-then-update (no native INSERT-OR-REPLACE in SQLAlchemy
+        # core that is safe under concurrent writes, so we rely on the @transaction
+        # decorator for serialisation).
         obj = db.session.get(ExtensionSettings, _SETTINGS_ROW_ID)
         if obj is None:
             obj = ExtensionSettings(
