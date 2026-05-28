@@ -229,17 +229,27 @@ async def get_schema(
     # (e.g. ReportSchedule for "report") rather than a single static Dataset guard.
     class_permission = _MODEL_TYPE_CLASS_PERMISSION.get(request.model_type)
     if class_permission:
-        from flask import g
+        from flask import current_app, g
 
         from superset import security_manager
 
-        if not security_manager.can_access("can_read", class_permission):
+        if current_app.config.get("MCP_RBAC_ENABLED", True) and not (
+            security_manager.can_access("can_read", class_permission)
+        ):
             user_str = getattr(getattr(g, "user", None), "username", None)
             raise MCPPermissionDeniedError(
                 permission_name="can_read",
                 view_name=class_permission,
                 user=user_str,
                 tool_name="get_schema",
+            )
+
+    if request.model_type == "report":
+        from superset import is_feature_enabled
+
+        if not is_feature_enabled("ALERT_REPORTS"):
+            raise ValueError(
+                "The Alerts & Reports feature is disabled on this instance."
             )
 
     can_view_data_model_metadata = user_can_view_data_model_metadata()
