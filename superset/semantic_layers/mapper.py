@@ -600,11 +600,11 @@ def _convert_query_object_filter(
 
 
 def _coerce_filter_value(
-    value: FilterValues | frozenset[FilterValues],
+    value: FilterValues | tuple[FilterValues, ...],
     dimension: Dimension,
-) -> FilterValues | frozenset[FilterValues]:
-    if isinstance(value, frozenset):
-        return frozenset(_coerce_scalar_filter_value(v, dimension) for v in value)
+) -> FilterValues | tuple[FilterValues, ...]:
+    if isinstance(value, tuple):
+        return tuple(_coerce_scalar_filter_value(v, dimension) for v in value)
     return _coerce_scalar_filter_value(value, dimension)
 
 

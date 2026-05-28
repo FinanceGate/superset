@@ -107,11 +107,11 @@ export const DatasetSelectLabel = (item: Dataset) => (
           <div>
             {parentLabelLower(item.kind)}: {item.database.database_name}
           </div>
-	  {item.schema && isValidValue(item.schema) &&
-	    <div>
-		{t('Schema')}:{' '}{item.schema}
-	    </div>
-	  }
+          {item.schema && isValidValue(item.schema) && (
+            <div>
+              {t('Schema')}: {item.schema}
+            </div>
+          )}
         </div>
       </TooltipContent>
     }
