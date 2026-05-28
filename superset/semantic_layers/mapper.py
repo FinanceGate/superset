@@ -566,7 +566,10 @@ def _convert_query_object_filter(
 
     value = _coerce_filter_value(value, dimension)
 
-    # Map QueryObject operators to semantic layer operators
+    # Map QueryObject operators to semantic layer operators. The Operator enum
+    # exposes only LIKE, so ILIKE collapses to LIKE here; case-insensitivity is
+    # delegated to the semantic-view backend (e.g. via collation), matching the
+    # spec where pattern matching semantics are implementation-defined.
     operator_mapping = {
         FilterOperator.EQUALS.value: Operator.EQUALS,
         FilterOperator.NOT_EQUALS.value: Operator.NOT_EQUALS,

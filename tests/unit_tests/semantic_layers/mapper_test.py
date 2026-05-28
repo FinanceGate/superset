@@ -363,6 +363,8 @@ def test_convert_query_object_filter_in(mock_datasource: MagicMock) -> None:
 
     result = _convert_query_object_filter(filter_, all_dimensions)
 
+    # IN values are converted to a tuple (not a set) so input order is preserved
+    # downstream — semantic-view backends may rely on it for stable plans.
     assert result == {
         Filter(
             type=PredicateType.WHERE,

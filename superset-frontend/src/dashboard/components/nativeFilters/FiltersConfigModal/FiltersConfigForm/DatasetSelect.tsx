@@ -65,10 +65,13 @@ const toCompositeValue = (id: number, kind?: string): string =>
   kind === 'semantic_view' ? `sv:${id}` : `ds:${id}`;
 
 /** Extracts the numeric ID from a composite "sv:123" / "ds:456" string. */
-const fromCompositeValue = (compositeValue: string | number): number =>
-  typeof compositeValue === 'string'
-    ? parseInt(compositeValue.split(':')[1], 10)
-    : compositeValue;
+const fromCompositeValue = (compositeValue: string | number): number => {
+  if (typeof compositeValue !== 'string') return compositeValue;
+  const parts = compositeValue.split(':');
+  return parts.length === 2
+    ? parseInt(parts[1], 10)
+    : parseInt(compositeValue, 10);
+};
 
 /** Derives the `kind` value from a composite string prefix. */
 const kindFromComposite = (compositeValue: string): string | undefined =>
