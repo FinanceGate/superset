@@ -30,6 +30,7 @@ from fastmcp import Context
 from superset_core.mcp.decorators import tool, ToolAnnotations
 
 from superset.extensions import event_logger
+from superset.mcp_service.auth import MCPPermissionDeniedError
 from superset.mcp_service.common.schema_discovery import (
     CHART_DEFAULT_COLUMNS,
     CHART_SEARCH_COLUMNS,
@@ -182,10 +183,18 @@ _SCHEMA_CORE_FACTORIES: dict[
     "report": _get_report_schema_core,
 }
 
+# Maps each model type to the FAB class permission name used by its tools
+_MODEL_TYPE_CLASS_PERMISSION: dict[ModelType, str] = {
+    "chart": "Chart",
+    "dataset": "Dataset",
+    "dashboard": "Dashboard",
+    "database": "Database",
+    "report": "ReportSchedule",
+}
+
 
 @tool(
     tags=["discovery"],
-    class_permission_name="Dataset",
     annotations=ToolAnnotations(
         title="Get schema",
         readOnlyHint=True,
@@ -215,6 +224,23 @@ async def get_schema(
         Comprehensive schema information for the requested model type
     """
     await ctx.info(f"Getting schema for model_type={request.model_type}")
+
+    # Per-model-type RBAC check so each model type requires its own class permission
+    # (e.g. ReportSchedule for "report") rather than a single static Dataset guard.
+    class_permission = _MODEL_TYPE_CLASS_PERMISSION.get(request.model_type)
+    if class_permission:
+        from flask import g
+
+        from superset import security_manager
+
+        if not security_manager.can_access("can_read", class_permission):
+            user_str = getattr(getattr(g, "user", None), "username", None)
+            raise MCPPermissionDeniedError(
+                permission_name="can_read",
+                view_name=class_permission,
+                user=user_str,
+                tool_name="get_schema",
+            )
 
     can_view_data_model_metadata = user_can_view_data_model_metadata()
     if not can_view_data_model_metadata and request.model_type in {
